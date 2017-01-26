@@ -2856,7 +2856,14 @@ static void sched_freq_tick_walt(int cpu)
 	if (walt_disabled || !sysctl_sched_use_walt_cpu_util)
 		return sched_freq_tick_pelt(cpu);
 
-	if (cpu_utilization <= capacity_curr)
+	/*
+	 * Add a margin to the WALT utilization to check if we will need to
+	 * increase frequency.
+	 * NOTE: WALT tracks a single CPU signal for all the scheduling
+	 * classes, thus this margin is going to be added to the DL class as
+	 * well, which is something we do not do in sched_freq_tick_pelt case.
+	 */
+	if (add_capacity_margin(cpu_utilization) <= capacity_curr)
 		return;
 
 	/*
